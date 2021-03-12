@@ -1,29 +1,83 @@
-let balance = 500.00;
-
-class Withdrawal {
-
-  constructor(amount) {
-    this.amount = amount;
+class Account {
+  constructor(username) {
+    this.username = username;
+    this.transactions = [];
   }
-
-  commit() {
-    balance -= this.amount;
+  get balance() {
+    let balance = 0;
+    for (let t of this.transactions) {
+    	balance += t.value;
+    }
+    return balance;
+  }
+  addTransaction(transaction) {
+    this.transactions.push(transaction);
   }
 
 }
 
+class Transaction {
+  constructor(amount, account) {
+    this.amount  = amount;
+    this.account = account;
+  }
+  commit() {
+    if (!this.isAllowed()) return false;
+      this.time = new Date();
+      this.account.addTransaction(this);
+      return true;
+  }
+}
 
+class Deposit extends Transaction {
+  get value() {
+    return this.amount;
+  }
+  isAllowed() {
+    return true;
+  }
+}
 
+class Withdrawal extends Transaction {
+  get value() {
+    return -this.amount;
+  }
+
+  isAllowed() {
+    return (this.account.balance - this.amount >= 0);
+  }
+}
 
 // DRIVER CODE BELOW
-// We use the code below to "drive" the application logic above and make sure it's working as expected
 
-t1 = new Withdrawal(50.25);
-t1.commit();
-console.log('Transaction 1:', t1);
+const myAccount = new Account('billybob');
 
-t2 = new Withdrawal(9.99);
-t2.commit();
-console.log('Transaction 2:', t2);
+console.log('Starting Balance:', myAccount.balance);
+console.log('--------');
 
-console.log('Balance:', balance);
+console.log('Attempting to Withdraw: $1000.00')
+const t1 = new Withdrawal(1000.00, myAccount);
+console.log('Result: ', t1.commit());
+console.log('Ending Balance:', myAccount.balance);
+console.log('--------');
+
+console.log('Deposit cash: $120');
+const t2 = new Deposit(120.00, myAccount);
+console.log('Result:', t2.commit());
+console.log('Ending Balance:', myAccount.balance);
+console.log('--------');
+
+console.log('Attempting to Withdraw: $100.00')
+const t3 = new Withdrawal(100.00, myAccount);
+console.log('Result: ', t3.commit());
+console.log('Ending Balance:', myAccount.balance);
+console.log('--------');
+
+console.log('Attempting to Withdraw: $18.00')
+const t4 = new Withdrawal(18.00, myAccount);
+console.log('Result: ', t4.commit());
+console.log('Ending Balance:', myAccount.balance);
+console.log('--------');
+
+console.log('Account Transaction History: ', myAccount.transactions)
+
